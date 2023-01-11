@@ -6,16 +6,34 @@
   tasks:
 
     - name: Actualizar los repositorios
-      command: apt update
+      apt:
+        update_cache: yes
 
     - name: Instalar el servidor web Apache
-      command: apt install apache2 -y
+      apt:
+        name: apache2
+        state: present
 
     - name: Instalar el sistema gestor de bases de datos MySQL
-      command: apt install mysql-server -y
+      apt:
+        name: mysql-server
+        state: present
 
-    - name: Instalar PHP
-      command: apt install php libapache2-mod-php php-mysql -y
+    - name: Instalar PHP y los módulos necesarios
+      apt: 
+        name:
+          - php
+          - php-mysql
+          - libapache2-mod-php
+        state: present
 
-    - name: Reiniciar el servicio de Apache
-      command: systemctl restart apache2
+    - name: Reiniciar el servidor web Apache
+      service:
+        name: apache2
+        state: restarted
+
+    - name: Copiar el archivo phpinfo.php
+      copy:
+        src: php/phpinfo.php
+        dest: /var/www/html/
+        mode: 0755
