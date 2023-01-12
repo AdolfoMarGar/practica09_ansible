@@ -3,6 +3,12 @@
   hosts: aws
   become: yes
 
+  vars:
+    php_packages:
+      - php
+      - php-mysql
+      - libapache2-mod-php
+
   tasks:
 
     - name: Actualizar los repositorios
@@ -21,10 +27,7 @@
 
     - name: Instalar PHP y los módulos necesarios
       apt: 
-        name:
-          - php
-          - php-mysql
-          - libapache2-mod-php
+        name: "{{php_packages}}"
         state: present
 
     - name: Reiniciar el servidor web Apache
@@ -37,3 +40,5 @@
         src: php/phpinfo.php
         dest: /var/www/html/
         mode: 0755
+        owner: www-data
+        group: www-data
