@@ -1,47 +1,42 @@
 ---
-- name: Playbook para instalar la pila LAMP
+- name: Playbook para configurar MySQL
   hosts: aws
   become: yes
 
   vars:
-    php_packages:
-      - php
-      - php-mysql
-      - libapache2-mod-php
+    - db_name: db_name
+    - db_user: db_user
+    - db_password: db_password
 
   tasks:
 
-    - name: Actualizar los repositorios
-      apt:
-        update_cache: yes
-
-    - name: Instalar el servidor web Apache
-      apt:
-        name: apache2
-        state: present
-
-    - name: Instalar el sistema gestor de bases de datos MySQL
-      apt:
-        name: mysql-server
-        state: present
-
-    - name: Instalar PHP y los módulos necesarios
+    # Para utilizar el módulo mysql_db necesitamos tener instalado el paquete python3-mysqldb
+    - name: Instalamos el gestor de paquetes de Python pip3
       apt: 
-        name: "{{php_packages}}"
+        name: python3-pip
         state: present
-      notify:
-      - Reiniciar el servidor web apache
+        #pip es otro instalador, basado en python3
 
-    - name: Copiar el archivo phpinfo.php
-      copy:
-        src: php/phpinfo.php
-        dest: /var/www/html/
-        mode: 0755
-        owner: www-data
-        group: www-data
+    - name: Instalamos el módulo de pymysql
+      pip:
+        name: pymysql
+        state: present
 
-  handlers:
-    - name: Reiniciar el servidor web Apache
-      service:
-        name: apache2
-        state: restarted
+    - name: Crear una base de datos
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+        #este es para indicar que se conecte a traves del socket local en vez de buscarlo en web. Ya que sino de error.
+
+    # El parámetro 'no_log: true' lo utilizamos para ocultar información de salida
+    - name: Crear el usuario de la base de datos
+      no_log: true
+      mysql_user:         
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL" #priv son los privilegios asignados al usuario
+        #host: "%"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock 
+        #este es para indicar que se conecte a traves del socket local en vez de buscarlo en web. Ya que sino de error.
