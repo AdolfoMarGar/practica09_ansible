@@ -29,11 +29,8 @@
       apt: 
         name: "{{php_packages}}"
         state: present
-
-    - name: Reiniciar el servidor web Apache
-      service:
-        name: apache2
-        state: restarted
+      notify:
+      - Reiniciar el servidor web apache
 
     - name: Copiar el archivo phpinfo.php
       copy:
@@ -42,3 +39,9 @@
         mode: 0755
         owner: www-data
         group: www-data
+
+  handlers:
+    - name: Reiniciar el servidor web Apache
+      service:
+        name: apache2
+        state: restarted
